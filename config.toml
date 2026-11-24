@@ -1,0 +1,47 @@
+# Configuração do Radar de Consoles.
+#
+# cap = teto fixo opcional em reais. Se o preço ficar igual ou abaixo dele,
+# o robô avisa mesmo sem queda em relação à média. Exemplo: cap = 6500
+#
+# min_price = preço mínimo plausível. Abaixo disso o anúncio é ignorado, porque
+# quase sempre é jogo, acessório ou golpe com título de console.
+
+drop_pct = 0.10       # avisa quando cai 10% ou mais abaixo da média
+window_days = 7       # média calculada sobre os últimos 7 dias
+warmup_hours = 24     # só usa a média/mínimo depois de 24 h de histórico
+history_days = 30     # quanto histórico guardar
+
+# Vendedores aceitos (comparação sem diferenciar maiúsculas, por trecho do nome).
+trusted_sellers = [
+  "KaBuM!",
+  "Amazon",
+  "Magazine Luiza",
+  "Magalu",
+  "Pichau",
+  "Terabyte",
+]
+
+[items.ps5]
+min_price = 2500
+label = "PlayStation 5"
+queries = ["playstation 5"]
+
+[items.ps5_pro]
+min_price = 4500
+label = "PlayStation 5 Pro"
+queries = ["playstation 5 pro"]
+
+[items.xbox_series_x]
+min_price = 2500
+label = "Xbox Series X"
+queries = ["xbox series x"]
+
+[items.xbox_series_s]
+min_price = 1500
+label = "Xbox Series S"
+queries = ["xbox series s"]
+
+[items.gta6]
+min_price = 100
+label = "GTA 6"
+queries = ["gta 6 ps5", "gta 6 xbox"]
