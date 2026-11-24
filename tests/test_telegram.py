@@ -56,3 +56,24 @@ def test_send_returns_false_on_network_error():
         raise httpx.ConnectError("down")
     client = httpx.Client(transport=httpx.MockTransport(boom))
     assert send("t", "-100", "oi", client=client) is False
+
+
+def test_send_follows_group_upgraded_to_supergroup(caplog):
+    # Quando o grupo vira supergrupo, o Telegram responde 400 com o ID novo.
+    chats = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        chat = json.loads(req.content)["chat_id"]
+        chats.append(chat)
+        if chat == "-5250454481":
+            return httpx.Response(400, json={
+                "ok": False, "error_code": 400,
+                "description": "Bad Request: group chat was upgraded to a supergroup chat",
+                "parameters": {"migrate_to_chat_id": -1003456789012}})
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    with caplog.at_level("WARNING"):
+        assert send("t", "-5250454481", "oi", client=client) is True
+    assert chats == ["-5250454481", "-1003456789012"]
+    assert "-1003456789012" in caplog.text
