@@ -128,7 +128,8 @@ def main(argv: list[str] | None = None) -> int:
         token, chat = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
         if not token or not chat:
             # Falha visível: o GitHub avisa por e-mail que a configuração está incompleta.
-            log.error("TELEGRAM_TOKEN e TELEGRAM_CHAT_ID não configurados nos Secrets")
+            log.error("TELEGRAM_TOKEN e TELEGRAM_CHAT_ID não configurados "
+                      "(variáveis do Windows ou Secrets do GitHub); se acabou de salvar, abra um terminal novo")
             return 1
         send = partial(telegram.send, token, chat)
 
