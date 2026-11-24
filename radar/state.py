@@ -37,7 +37,15 @@ class State:
             json.dumps(dict(sorted(self.alerted.items())), indent=1), encoding="utf-8")
 
     def record(self, item: str, now: datetime, price: float) -> None:
-        self.history.setdefault(item, []).append((now, price))
+        """Um ponto por hora: rodadas da mesma hora mantêm o menor preço."""
+        points = self.history.setdefault(item, [])
+        hour = now.replace(minute=0, second=0, microsecond=0)
+        if points:
+            last_t, last_p = points[-1]
+            if last_t.replace(minute=0, second=0, microsecond=0) == hour:
+                points[-1] = (last_t, min(last_p, price))
+                return
+        points.append((now, price))
 
     def prune(self, now: datetime, days: int) -> None:
         cutoff = now - timedelta(days=days)
