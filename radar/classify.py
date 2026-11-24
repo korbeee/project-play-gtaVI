@@ -8,9 +8,10 @@ _ACCESSORY_FIRST = {
     "controle", "capa", "case", "suporte", "base", "carregador", "headset",
     "fone", "skin", "pelicula", "cabo", "dock", "cooler", "dualsense", "pulse",
     "volante", "cartao", "gift", "assinatura", "adesivo", "hd", "ssd", "bolsa",
-    "estacao", "kit", "mochila", "grip", "protetor", "camera",
+    "estacao", "mochila", "grip", "protetor", "camera",
 }
 _ACCESSORY_ANYWHERE = re.compile(r"\bpara (o |a )?(ps5|xbox|console)\b|\bcompativel\b")
+_BUNDLE = {"console", "bundle", "kit", "+"}
 _GTA = re.compile(r"\bgta (6|vi)\b|\bgrand theft auto vi\b")
 
 
@@ -43,13 +44,11 @@ def classify(title: str) -> str | None:
     first = words[0]
     if first in _ACCESSORY_FIRST or _ACCESSORY_ANYWHERE.search(text):
         return None
-    # "PlayStation 5 DualSense Edge" é controle; "Console PS5 ... Controle DualSense" é console.
-    if "console" not in words and _ACCESSORY_FIRST.intersection(words):
-        return None
     is_gta = bool(_GTA.search(text))
     if first in ("jogo", "game"):
         return "gta6" if is_gta else None
-    if is_gta and "console" not in text:
+    # Console vendido junto com o jogo conta como console.
+    if is_gta and not _BUNDLE.intersection(words):
         return "gta6"
     return _console(text)
 

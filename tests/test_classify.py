@@ -18,7 +18,9 @@ from radar.classify import classify, is_trusted
     ("Headset Pulse 3D PS5", None),
     ("Capa protetora Xbox Series S", None),
     ("Jogo EA FC 26 PS5", None),
-    ("PlayStation 5 DualSense Edge", None),
+    ("Sony PlayStation 5 Edição Digital 825GB 1 Controle", "ps5"),
+    ("Bundle GTA VI + PlayStation 5 Slim Digital 825 GB - Pacote A", "ps5"),
+    ("Kit Console Xbox Series S + GTA VI", "xbox_series_s"),
     ("Console Sony PlayStation 5, SSD 825GB, Controle Sem Fio DualSense + 2 Jogos Digitais", "ps5"),
 ])
 def test_classify(title, item):
