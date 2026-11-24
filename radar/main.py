@@ -60,7 +60,8 @@ def _run_item(cfg: Config, item: str, state: State, fetch, send, now, sources, s
     best = min(offers, key=lambda o: o.price)
     alert = check(best, state.history.get(item, []), now, cfg, item_cfg.cap, state.alerted)
     if alert is None:
-        log.info("%s: menor preço R$ %.2f em %s, sem promoção", item, best.price, best.store)
+        log.info("%s: menor preço R$ %.2f em %s, sem promoção (%s | %s)",
+                 item, best.price, best.store, best.title[:80], best.url)
         state.record(item, now, best.price)
         return None
     if not send(telegram.format_alert(alert, item_cfg.label, cfg.window_days)):
