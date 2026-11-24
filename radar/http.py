@@ -31,7 +31,7 @@ def is_block_page(html: str) -> bool:
 def fetch(url: str, client: httpx.Client | None = None) -> str | None:
     """Baixa a página. Retorna None se a loja recusar, bloquear ou a rede falhar."""
     own = client is None
-    client = client or httpx.Client(headers=HEADERS, timeout=25, follow_redirects=True)
+    client = client or httpx.Client(headers=HEADERS, timeout=15, follow_redirects=True)
     try:
         resp = client.get(url)
     except httpx.HTTPError as e:

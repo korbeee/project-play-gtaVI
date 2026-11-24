@@ -42,6 +42,6 @@ label = "Xbox Series S"
 queries = ["xbox series s"]
 
 [items.gta6]
-min_price = 100
+min_price = 200
 label = "GTA 6"
 queries = ["gta 6 ps5", "gta 6 xbox"]

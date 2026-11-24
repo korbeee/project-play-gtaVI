@@ -24,7 +24,8 @@ def parse(html: str) -> list[Offer]:
         price = parse_brl(price_node.text())
         via = next((s.text(strip=True) for s in card.css("span") if s.text(strip=True).startswith("Via ")), "")
         seller = via[4:].strip()
-        if price is None or not seller:
+        # "Via Amazon" pode ser vendedor do marketplace; a Amazon entra pela fonte própria.
+        if price is None or not seller or seller.casefold() == "amazon":
             continue
         offers.append(Offer(
             title=name.text(strip=True),

@@ -10,6 +10,12 @@ _ACCESSORY_FIRST = {
     "volante", "cartao", "gift", "assinatura", "adesivo", "hd", "ssd", "bolsa",
     "estacao", "mochila", "grip", "protetor", "camera",
 }
+# Palavras que nunca aparecem no título de um console ou do jogo em si.
+_NEVER = {
+    "vr", "vr2", "expansao", "expansion", "memoria", "steelbook", "guia", "moletom",
+    "camiseta", "caneca", "poster", "livro", "chaveiro", "boneco", "funko", "quadro",
+}
+_PLATFORM = re.compile(r"\bps5\b|\bxbox\b|\bseries [xs]\b")
 _ACCESSORY_ANYWHERE = re.compile(r"\bpara (o |a )?(ps5|xbox|console)\b|\bcompativel\b")
 _BUNDLE = {"console", "bundle", "kit", "+"}
 _GTA = re.compile(r"\bgta (6|vi)\b|\bgrand theft auto vi\b")
@@ -42,7 +48,9 @@ def classify(title: str) -> str | None:
         return None
     words = text.split(" ")
     first = words[0]
-    if first in _ACCESSORY_FIRST or _ACCESSORY_ANYWHERE.search(text):
+    if first in _ACCESSORY_FIRST or _ACCESSORY_ANYWHERE.search(text) or _NEVER.intersection(words):
+        return None
+    if not _PLATFORM.search(text):
         return None
     is_gta = bool(_GTA.search(text))
     if first in ("jogo", "game"):

@@ -18,4 +18,4 @@ def test_min_price_guards_against_games_and_accessories():
     cfg = load_config(ROOT / "config.toml")
     assert cfg.items["ps5_pro"].min_price == 4500
     assert cfg.items["xbox_series_s"].min_price == 1500
-    assert cfg.items["gta6"].min_price == 100
+    assert cfg.items["gta6"].min_price == 200

@@ -6,10 +6,12 @@ from radar.models import Offer
 from radar.prices import parse_brl
 
 NAME = "amazon"
+# Filtro "vendido pela Amazon.com.br": tira vendedores desconhecidos do marketplace.
+AMAZON_SELLER = "p_6%3AA1ZZFT5FULY4LN"
 
 
 def search_url(query: str) -> str:
-    return "https://www.amazon.com.br/s?k=" + quote_plus(query)
+    return f"https://www.amazon.com.br/s?k={quote_plus(query)}&rh={AMAZON_SELLER}"
 
 
 def parse(html: str) -> list[Offer]:
@@ -28,7 +30,7 @@ def parse(html: str) -> list[Offer]:
         old = parse_brl(old_node.text()) if old_node else None
         offers.append(Offer(
             title=title_node.text(strip=True),
-            # A busca não mostra o vendedor; a Amazon cobre o marketplace com a garantia A-Z.
+            # A busca já vem filtrada para itens vendidos pela própria Amazon.
             store="Amazon",
             seller="Amazon",
             price=price,

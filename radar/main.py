@@ -46,6 +46,28 @@ def _collect(cfg: Config, item: str, fetch, sources, status: dict[str, str]) -> 
     return found
 
 
+def _run_item(cfg: Config, item: str, state: State, fetch, send, now, sources, status) -> Alert | None:
+    item_cfg = cfg.items[item]
+    offers = _collect(cfg, item, fetch, sources, status)
+    if not offers:
+        log.info("%s: nenhuma oferta encontrada", item)
+        return None
+    best = min(offers, key=lambda o: o.price)
+    alert = check(best, state.history.get(item, []), now, cfg, item_cfg.cap, state.alerted)
+    if alert is None:
+        log.info("%s: menor preço R$ %.2f em %s, sem promoção", item, best.price, best.store)
+        state.record(item, now, best.price)
+        return None
+    if not send(telegram.format_alert(alert, item_cfg.label, cfg.window_days)):
+        # Não registra o preço: senão a próxima rodada já não o veria como promoção.
+        log.error("%s: aviso não enviado; tenta de novo na próxima rodada", item)
+        return None
+    state.alerted[best.url] = best.price
+    state.record(item, now, best.price)
+    log.info("%s: AVISO enviado (%s, R$ %.2f)", item, alert.reason, best.price)
+    return alert
+
+
 def run_once(
     cfg: Config,
     state: State,
@@ -56,24 +78,14 @@ def run_once(
 ) -> list[Alert]:
     alerts: list[Alert] = []
     status: dict[str, str] = {}
-    for item, item_cfg in cfg.items.items():
-        offers = _collect(cfg, item, fetch, sources, status)
-        if not offers:
-            log.info("%s: nenhuma oferta encontrada", item)
+    for item in cfg.items:
+        try:
+            alert = _run_item(cfg, item, state, fetch, send, now, sources, status)
+        except Exception as e:  # um item com problema não derruba os outros
+            log.error("%s: erro inesperado (%s: %s)", item, e.__class__.__name__, e)
             continue
-        best = min(offers, key=lambda o: o.price)
-        alert = check(best, state.history.get(item, []), now, cfg, item_cfg.cap, state.alerted)
         if alert:
-            text = telegram.format_alert(alert, item_cfg.label, cfg.window_days)
-            if send(text):
-                state.alerted[best.url] = best.price
-                alerts.append(alert)
-                log.info("%s: AVISO enviado (%s, R$ %.2f)", item, alert.reason, best.price)
-            else:
-                log.error("%s: aviso não enviado; tenta de novo na próxima rodada", item)
-        else:
-            log.info("%s: menor preço R$ %.2f em %s, sem promoção", item, best.price, best.store)
-        state.record(item, now, best.price)
+            alerts.append(alert)
     state.prune(now, cfg.history_days)
     for name, st in sorted(status.items()):
         log.info("fonte %s: %s", name, st)
@@ -103,11 +115,15 @@ def main(argv: list[str] | None = None) -> int:
     else:
         token, chat = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
         if not token or not chat:
-            log.error("TELEGRAM_TOKEN e TELEGRAM_CHAT_ID não configurados; nada foi enviado")
-            return 0
+            # Falha visível: o GitHub avisa por e-mail que a configuração está incompleta.
+            log.error("TELEGRAM_TOKEN e TELEGRAM_CHAT_ID não configurados nos Secrets")
+            return 1
         send = partial(telegram.send, token, chat)
 
-    run_once(cfg, state, _polite_fetch, send, datetime.now(UTC))
-    if not args.dry_run:
-        state.save(data_dir)
+    try:
+        run_once(cfg, state, _polite_fetch, send, datetime.now(UTC))
+    finally:
+        # Salva mesmo se algo quebrar, para nunca repetir um aviso já enviado.
+        if not args.dry_run:
+            state.save(data_dir)
     return 0

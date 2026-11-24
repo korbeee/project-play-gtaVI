@@ -19,6 +19,8 @@ def test_parse_brl():
     assert parse_brl("R$\xa04.369,04") == 4369.04
     assert parse_brl("10x de R$ 779,90") == 779.90
     assert parse_brl("indisponível") is None
+    assert parse_brl("R$ 1999,90") == 1999.90
+    assert parse_brl("R$ 4369") == 4369.0
 
 
 def test_kabum_parse():
@@ -59,9 +61,16 @@ def test_zoom_parse():
     assert slim.seller == "Magazine Luiza"
 
 
+def test_zoom_skips_amazon_cards():
+    # "Via Amazon" no Zoom pode ser vendedor do marketplace; a Amazon entra pela fonte própria.
+    offers = zoom.parse(fixture("zoom.html"))
+    assert offers and all(o.seller != "Amazon" for o in offers)
+
+
 def test_search_urls():
     assert kabum.search_url("xbox series s") == "https://www.kabum.com.br/busca/xbox-series-s"
-    assert amazon.search_url("gta 6 ps5") == "https://www.amazon.com.br/s?k=gta+6+ps5"
+    # Só itens vendidos e entregues pela própria Amazon (sem marketplace).
+    assert amazon.search_url("gta 6 ps5") == "https://www.amazon.com.br/s?k=gta+6+ps5&rh=p_6%3AA1ZZFT5FULY4LN"
     assert zoom.search_url("playstation 5") == "https://www.zoom.com.br/search?q=playstation+5"
     assert [s.NAME for s in ALL] == ["kabum", "amazon", "zoom"]
 

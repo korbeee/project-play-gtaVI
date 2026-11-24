@@ -12,8 +12,8 @@ Roda de graça no GitHub Actions, com o seu PC desligado.
 | Fonte | Cobre |
 |---|---|
 | Kabum | Kabum e parceiros que vendem lá (ex.: Magalu) |
-| Amazon.com.br | Amazon |
-| Zoom (comparador) | Magalu, Pichau, Terabyte e outras, quando listadas |
+| Amazon.com.br | Só itens vendidos pela própria Amazon (sem vendedores do marketplace) |
+| Zoom (comparador) | Magalu, Pichau, Terabyte e outras, quando listadas (ofertas "Via Amazon" são ignoradas) |
 
 Só valem vendedores da lista `trusted_sellers` em `config.toml`. Pichau, Terabyte,
 Magalu e Shopee bloqueiam robôs no acesso direto; o radar **não** contorna esses

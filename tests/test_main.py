@@ -107,3 +107,54 @@ def test_price_below_min_price_ignored():
     run_once(CFG, state, lambda url: "<html/>", out, NOW, sources=[src])
     assert out.texts == []
     assert state.history["ps5_pro"][-1][0] != NOW
+
+
+def test_failed_minimo_alert_is_retried_next_run():
+    # 48 h a R$ 5000; uma oferta de R$ 4900 é novo mínimo. Se o envio falhar,
+    # a rodada seguinte precisa tentar de novo (o preço não pode virar histórico).
+    src = _fake_source(_offer("Console PlayStation 5 Pro", "KaBuM!", 4900))
+    state = State(history={"ps5_pro": history(5000, days=2)})
+    run_once(CFG, state, lambda url: "<html/>", Outbox(ok=False), NOW, sources=[src])
+    out = Outbox()
+    alerts = run_once(CFG, state, lambda url: "<html/>", out, NOW + timedelta(minutes=10), sources=[src])
+    assert [a.reason for a in alerts] == ["minimo"] and len(out.texts) == 1
+
+
+def test_error_in_one_item_does_not_stop_the_others():
+    calls = []
+
+    def send(text):
+        calls.append(text)
+        if len(calls) == 1:
+            raise RuntimeError("falha inesperada")
+        return True
+
+    src = _fake_source(_offer("Console PlayStation 5 Pro", "KaBuM!", 5000),
+                       _offer("Console Xbox Series X", "KaBuM!", 3000))
+    state = State(history={"ps5_pro": history(9000), "xbox_series_x": history(9000)})
+    run_once(CFG, state, lambda url: "<html/>", send, NOW, sources=[src])
+    assert len(calls) == 2 and len(state.alerted) == 1
+
+
+def test_main_without_secrets_fails_loudly(monkeypatch, tmp_path):
+    import radar.main as m
+    monkeypatch.delenv("TELEGRAM_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    assert m.main([]) == 1
+
+
+def test_main_saves_state_even_if_run_crashes(monkeypatch, tmp_path):
+    import radar.main as m
+    (tmp_path / "config.toml").write_text((ROOT / "config.toml").read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(m, "ROOT", tmp_path)
+    monkeypatch.setenv("TELEGRAM_TOKEN", "t")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "c")
+
+    def crash(cfg, state, fetch, send, now, sources=None):
+        state.alerted["https://x/1"] = 1.0
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(m, "run_once", crash)
+    with __import__("pytest").raises(RuntimeError):
+        m.main([])
+    assert (tmp_path / "data" / "alerted.json").exists()

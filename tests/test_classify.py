@@ -21,6 +21,13 @@ from radar.classify import classify, is_trusted
     ("Sony PlayStation 5 Edição Digital 825GB 1 Controle", "ps5"),
     ("Bundle GTA VI + PlayStation 5 Slim Digital 825 GB - Pacote A", "ps5"),
     ("Kit Console Xbox Series S + GTA VI", "xbox_series_s"),
+    # Revisão final: produtos que passavam como console ou jogo.
+    ("Moletom GTA VI", None),
+    ("Guia Oficial GTA VI", None),
+    ("Steelbook GTA VI PS5", None),
+    ("PlayStation VR2 PS5", None),
+    ("Seagate Cartão de Expansão 2TB Xbox Series X|S", None),
+    ("Grand Theft Auto VI - PlayStation 5", "gta6"),
     ("Console Sony PlayStation 5, SSD 825GB, Controle Sem Fio DualSense + 2 Jogos Digitais", "ps5"),
 ])
 def test_classify(title, item):
