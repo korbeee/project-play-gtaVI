@@ -7,6 +7,7 @@ import time
 from dataclasses import replace
 from datetime import UTC, datetime
 from functools import partial
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Callable
 
@@ -105,8 +106,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="radar", description="Radar de preços de consoles")
     parser.add_argument("--dry-run", action="store_true", help="mostra os avisos em vez de enviar")
     parser.add_argument("--ping", action="store_true", help="só manda uma mensagem de teste no grupo")
+    parser.add_argument("--log-file", type=Path, help="grava o registro neste arquivo (até ~1 MB)")
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    if args.log_file:
+        args.log_file.parent.mkdir(parents=True, exist_ok=True)
+        handlers = [RotatingFileHandler(args.log_file, maxBytes=1_000_000, backupCount=1, encoding="utf-8")]
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
+                        handlers=handlers, force=True)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     cfg = load_config(ROOT / "config.toml")

@@ -177,3 +177,18 @@ def test_ping_fails_loudly_when_telegram_refuses(monkeypatch):
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "c")
     monkeypatch.setattr(m.telegram, "send", lambda token, chat, text: False)
     assert m.main(["--ping"]) == 1
+
+
+def test_log_file_records_the_run(monkeypatch, tmp_path):
+    # No PC a tarefa roda escondida (pythonw): o registro precisa ir para um arquivo.
+    import logging
+
+    import radar.main as m
+    log_file = tmp_path / "radar.log"
+    monkeypatch.delenv("TELEGRAM_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    assert m.main(["--log-file", str(log_file)]) == 1
+    for h in logging.getLogger().handlers[:]:
+        h.close()
+        logging.getLogger().removeHandler(h)
+    assert "TELEGRAM_TOKEN" in log_file.read_text(encoding="utf-8")

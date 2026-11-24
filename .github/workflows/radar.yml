@@ -1,8 +1,10 @@
 name: radar
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
+  # Agendamento desligado: o radar roda no PC pelo Agendador do Windows (ver README).
+  # Para voltar a rodar na nuvem, descomente as duas linhas abaixo.
+  # schedule:
+  #   - cron: "*/10 * * * *"
   workflow_dispatch:
     inputs:
       teste:

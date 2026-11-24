@@ -98,7 +98,22 @@ Tudo fica em `config.toml`:
 
 Para **pausar**, vá em **Actions → radar → ⋯ → Disable workflow**.
 
-## Rodar no seu PC (teste)
+## Rodar no seu PC (Agendador do Windows)
+
+Hoje o radar roda no PC: a tarefa **Radar de Consoles** do Agendador do Windows
+executa `.venv\Scripts\pythonw.exe -m radar --log-file data\radar.log` a cada 10
+minutos, escondida, enquanto o PC estiver ligado e você estiver logado. O
+agendamento do GitHub Actions está desligado em `.github/workflows/radar.yml`.
+
+O token e o ID do grupo ficam em variáveis de ambiente do seu usuário do Windows
+(`TELEGRAM_TOKEN` e `TELEGRAM_CHAT_ID`), nunca em arquivos do projeto.
+
+- **Ver o que ele fez:** abra `data\radar.log`.
+- **Mensagem de teste:** `.venv\Scripts\python -m radar --ping`
+- **Pausar:** `Disable-ScheduledTask -TaskName "Radar de Consoles"`
+- **Voltar:** `Enable-ScheduledTask -TaskName "Radar de Consoles"`
+
+## Testes e simulação
 
 ```powershell
 python -m venv .venv
