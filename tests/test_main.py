@@ -158,3 +158,22 @@ def test_main_saves_state_even_if_run_crashes(monkeypatch, tmp_path):
     with __import__("pytest").raises(RuntimeError):
         m.main([])
     assert (tmp_path / "data" / "alerted.json").exists()
+
+
+def test_ping_sends_a_test_message(monkeypatch):
+    import radar.main as m
+    sent = []
+    monkeypatch.setenv("TELEGRAM_TOKEN", "t")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "c")
+    monkeypatch.setattr(m.telegram, "send", lambda token, chat, text: sent.append(text) or True)
+    monkeypatch.setattr(m, "run_once", lambda *a, **k: (_ for _ in ()).throw(AssertionError("não deve rodar")))
+    assert m.main(["--ping"]) == 0
+    assert len(sent) == 1 and "Radar de Consoles ligado" in sent[0]
+
+
+def test_ping_fails_loudly_when_telegram_refuses(monkeypatch):
+    import radar.main as m
+    monkeypatch.setenv("TELEGRAM_TOKEN", "t")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "c")
+    monkeypatch.setattr(m.telegram, "send", lambda token, chat, text: False)
+    assert m.main(["--ping"]) == 1

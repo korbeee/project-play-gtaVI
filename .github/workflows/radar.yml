@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      teste:
+        description: "Mandar uma mensagem de teste no grupo"
+        type: boolean
+        default: true
 
 # Duas rodadas nunca salvam o histórico ao mesmo tempo.
 concurrency:
@@ -28,6 +33,13 @@ jobs:
 
       - name: Instalar
         run: pip install -e .
+
+      - name: Mensagem de teste
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.teste }}
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m radar --ping
 
       - name: Procurar promoções
         env:

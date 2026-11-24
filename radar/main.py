@@ -21,6 +21,10 @@ from radar.state import State
 
 log = logging.getLogger("radar")
 ROOT = Path(__file__).resolve().parent.parent
+PING_TEXT = (
+    "✅ Radar de Consoles ligado.\n"
+    "Vou avisar aqui só quando PS5, PS5 Pro, Xbox Series X/S ou GTA 6 ficarem baratos."
+)
 
 
 def _collect(cfg: Config, item: str, fetch, sources, status: dict[str, str]) -> list[Offer]:
@@ -100,6 +104,7 @@ def _polite_fetch(url: str) -> str | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="radar", description="Radar de preços de consoles")
     parser.add_argument("--dry-run", action="store_true", help="mostra os avisos em vez de enviar")
+    parser.add_argument("--ping", action="store_true", help="só manda uma mensagem de teste no grupo")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -119,6 +124,11 @@ def main(argv: list[str] | None = None) -> int:
             log.error("TELEGRAM_TOKEN e TELEGRAM_CHAT_ID não configurados nos Secrets")
             return 1
         send = partial(telegram.send, token, chat)
+
+    if args.ping:
+        ok = send(PING_TEXT)
+        log.info("mensagem de teste %s", "enviada" if ok else "NÃO enviada")
+        return 0 if ok else 1
 
     try:
         run_once(cfg, state, _polite_fetch, send, datetime.now(UTC))
